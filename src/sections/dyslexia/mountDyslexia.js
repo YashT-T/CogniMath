@@ -1,5 +1,3 @@
-import { recordAnswer } from '../../lib/history.js';
-import { freshPick } from '../../lib/questionMemory.js';
 /* Dyslexia section (WordSpark): reading and sound games with voice, big text and calm mode.
    Wrapped in mount() so it only touches the DOM once the section has rendered.
    Every element id is prefixed "dy-" so it cannot clash with the other sections. */
@@ -17,7 +15,7 @@ const shuffle = arr => {
   for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; }
   return a;
 };
-const pickN = (arr, n) => freshPick(arr, n, x => 'dx:' + (Array.isArray(x) ? x.join('|') : typeof x === 'object' ? JSON.stringify(x) : x));
+const pickN = (arr, n) => shuffle(arr).slice(0, n);
 const el = (tag, cls, text) => {
   const e = document.createElement(tag);
   if (cls) e.className = cls;
@@ -484,7 +482,6 @@ function renderQuestion() {
 }
 
 function onAnswer(q, ok, chosen) {
-  recordAnswer('dyslexia', ok);
   if (ok) session.right++;
   else session.misses.push({ prompt: q.prompt, chosen: chosen || 'No answer', answer: q.answer });
 

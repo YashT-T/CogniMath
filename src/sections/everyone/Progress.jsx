@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import CM from '../../lib/questions.js';
 import { MODES } from '../../lib/modes.js';
+import { getProgress } from '../../lib/progress.js';
 
 export default function Progress({ onPlay }) {
   const [d, setD] = useState(null);
   const [err, setErr] = useState(false);
   useEffect(() => {
-    fetch('/api/progress').then(r => r.json()).then(setD).catch(() => setErr(true));
+    getProgress().then(setD).catch(() => setErr(true));
   }, []);
 
   if (err) return <section className="hero"><h1>Progress</h1><p>Can’t reach the server, so there is no progress to show yet. Start it with <code>npm run dev</code>, then reload.</p></section>;

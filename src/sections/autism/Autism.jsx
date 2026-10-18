@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import mountAutism from './mountAutism.js';
-import ProgressCompare from '../../components/ProgressCompare.jsx';
 import './autism.css';
 
 /* Autism section. The games are drawn by mountAutism.js into the elements below, found by id.
@@ -30,12 +29,8 @@ export default function Autism({ api }) {
             <button type="button" className="pill" id="au-sensoryToggleBtn" aria-pressed="false">
               ⚡ High stimulant
             </button>
-            <button type="button" className="pill" id="au-soundToggleBtn" aria-pressed="true">🔊 Sound on</button>
           </nav>
         </header>
-
-        <p className="mode-note" id="au-modeNote" role="status"></p>
-        <ProgressCompare section="autism" />
 
         <section className="back" role="status" aria-live="polite">
           <div>
@@ -101,7 +96,6 @@ export default function Autism({ api }) {
               <div className="meter-fill" id="au-meterFill"></div>
             </div>
 
-            <div className="steps" id="au-steps" aria-hidden="true"></div>
             <div id="au-questionStage"></div>
 
             <div id="au-liveFeedback" role="status" style={{ marginTop: '18px', fontWeight: 700, minHeight: '28px' }}></div>
@@ -132,12 +126,6 @@ export default function Autism({ api }) {
 
             <div id="au-focusSkillsBox"></div>
             <div id="au-missedQuestionsBox"></div>
-            <div className="breathe" id="au-breatheBox">
-              <h3>Breathing break (optional)</h3>
-              <p id="au-breatheText">Breathe in as the circle grows, and out as it shrinks. Six slow cycles, about 48 seconds.</p>
-              <div className="breathe-circle" id="au-breatheCircle" aria-hidden="true"></div>
-              <button type="button" className="pill" id="au-breatheBtn">Start breathing break</button>
-            </div>
 
             <div style={{ display: 'flex', gap: '12px', marginTop: '24px', flexWrap: 'wrap' }}>
               <button type="button" className="cta" id="au-playAgainBtn">Play again</button>

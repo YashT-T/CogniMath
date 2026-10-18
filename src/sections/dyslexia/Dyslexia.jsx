@@ -1,6 +1,5 @@
 import { useEffect } from 'react';
 import mountDyslexia from './mountDyslexia.js';
-import ProgressCompare from '../../components/ProgressCompare.jsx';
 import './dyslexia.css';
 
 /* Dyslexia section (WordSpark). The games are drawn by mountDyslexia.js into the elements below, found by id.
@@ -19,8 +18,6 @@ export default function Dyslexia({ api }) {
             <button type="button" className="pill" id="dy-calmBtn" aria-pressed="false">Reduce motion: Off</button>
           </div>
         </header>
-
-        <ProgressCompare section="dyslexia" />
 
         <section className="back" role="status" aria-live="polite">
           <div>

@@ -3,8 +3,5 @@ import { createRoot } from 'react-dom/client';
 import App from './App.jsx';
 import './shell.css';
 import './intro.css';
-import './rewards.css';
-import './extras.css';
-import './stim-high.css';
 
 createRoot(document.getElementById('root')).render(<App />);

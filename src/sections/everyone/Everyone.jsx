@@ -2,7 +2,6 @@ import { useState } from 'react';
 import Play from './Play.jsx';
 import Progress from './Progress.jsx';
 import WelcomeBack from './WelcomeBack.jsx';
-import ProgressCompare from '../../components/ProgressCompare.jsx';
 import './everyone.css';
 
 /* Everyone section: the original CogniMath one-minute sprints against a saved ghost run, plus the Progress view.
@@ -18,7 +17,6 @@ export default function Everyone({ ready }) {
             <button type="button" aria-current={view === 'progress' ? 'page' : undefined} onClick={() => setView('progress')}>Progress</button>
           </nav>
         </header>
-        <ProgressCompare section="everyone" />
         {ready && <WelcomeBack onProgress={() => setView('progress')} />}
         {view === 'play' ? <Play /> : <Progress onPlay={() => setView('play')} />}
       </div>

@@ -1,6 +1,3 @@
-import { recordAnswer } from '../../lib/history.js';
-import { isSeen, markSeen, logAnswer } from '../../lib/questionMemory.js';
-import { isLow, setLow, onStim, stimLabel, stimNote } from '../../lib/stim.js';
 /* Autism section: predictable, low-stimulation practice with an untimed mode, sound and avatar upgrades.
    Wrapped in mount() so it only touches the DOM once the section has rendered.
    Every element id is prefixed "au-" so it cannot clash with the other sections. */
@@ -107,7 +104,6 @@ const ROOT = () => $('root');
       selectedTopicId: 'matrix',
       selectedModeId: 'calm',
       sensoryLow: false,
-      soundOn: true,
       streak: 0,
       points: 50,
       plays: 0,
@@ -160,7 +156,6 @@ const ROOT = () => $('root');
      ********************************************************************/
     let audioCtx = null;
     function playBeep(freq = 440, duration = 0.16) {
-      if (state.soundOn === false) return;
       try {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         if (audioCtx.state === 'suspended') audioCtx.resume();
@@ -316,24 +311,11 @@ const ROOT = () => $('root');
         `Adaptive Tier ${lv} • Score: ${sprint.score} • Keys 1–4 to answer`;
       $('liveFeedback').textContent = '';
 
-      renderSteps();
-      // Redraw (up to 10 tries) until the question is one this person has not been served yet.
-      const draw = () => {
-        if (topic.id === 'matrix') renderMatrixQuestion(lv, topic);
-        else if (topic.id === 'tactile') renderTactileQuestion(lv, topic);
-        else if (topic.id === 'beepmath') renderBeepQuestion(lv, topic);
-        else renderStandardQuestion(topic, lv);
-      };
-      const keyOf = q => (q && (q.key || q.p));
-      for (let k = 0; k < 10; k++) {
-        draw();
-        if (!keyOf(sprint.currentQ) || !isSeen(keyOf(sprint.currentQ))) break;
-      }
-      markSeen(keyOf(sprint.currentQ));
+      if (topic.id === 'matrix') renderMatrixQuestion(lv, topic);
+      else if (topic.id === 'tactile') renderTactileQuestion(lv, topic);
+      else if (topic.id === 'beepmath') renderBeepQuestion(lv, topic);
+      else renderStandardQuestion(topic, lv);
     }
-
-    /* Fisher-Yates shuffle, so answer keys are not predictable. */
-    const shuffleArr = a => { const x = [...a]; for (let i = x.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [x[i], x[j]] = [x[j], x[i]]; } return x; };
 
     /* --- Standard 4-Option Generator (Rapid Maths, Patterns, Logic, Emotion) --- */
     function renderStandardQuestion(topic, lv) {
@@ -353,80 +335,37 @@ const ROOT = () => $('root');
           tag: topic.tag
         };
       } else if (topic.id === 'pattern') {
-        // Sequence rules: a repeating cycle. Its length grows with the level. Answer order is shuffled.
-        const SYM = ['🔴', '🔵', '🔺', '🟨', '🟢', '⭐', '🌙', '☀️'];
-        const period = lv <= 1 ? 2 : lv === 2 ? (Math.random() < 0.5 ? 2 : 3) : lv <= 4 ? (Math.random() < 0.5 ? 3 : 4) : 4;
-        const cycle = shuffleArr(SYM).slice(0, period);
-        const seq = Array.from({ length: 6 }, (_, i) => cycle[i % period]);
-        const correct = cycle[6 % period];
-        const trap = cycle.find(x => x !== correct) || SYM.find(x => x !== correct);
-        const others = shuffleArr(SYM.filter(x => x !== correct && !cycle.includes(x))).slice(0, 2);
-        const opts = shuffleArr([correct, trap, ...others]);
+        const sets = [['🔴', '🔵'], ['🔺', '🟨', '🟢'], ['⭐', '🌙', '☀️']];
+        const s = sets[(lv - 1) % sets.length];
+        const seq = [s[0], s[1 % s.length], s[2 % s.length], s[3 % s.length], s[4 % s.length]];
+        const correct = s[5 % s.length];
+        const opts = ['🔴', '🔵', '🔺', '⭐'];
+        if (!opts.includes(correct)) opts[0] = correct;
         q = {
           p: `Complete the sequence: ${seq.join(' ')} ?`,
           a: opts,
           c: opts.indexOf(correct),
-          e: `The pattern repeats every ${period} symbols, so ${correct} comes next.`,
+          e: `The pattern repeats every ${s.length} symbols, so ${correct} comes next.`,
           tag: topic.tag
         };
       } else if (topic.id === 'logic') {
-        // Grid deduction: each row holds the same symbols once each. Find the missing symbol in row 3.
-        const ALL = ['🍎', '🍌', '🍇', '🍊', '🍓', '🥝', '🍒'];
-        const size = lv >= 3 ? 4 : 3;
-        const row = shuffleArr(ALL).slice(0, size);
-        const r1 = shuffleArr(row), r2 = shuffleArr(row), r3 = shuffleArr(row);
-        const hide = Math.floor(Math.random() * size);
-        const answer = r3[hide];
-        const shown = r3.filter((_, i) => i !== hide);
-        const outside = shuffleArr(ALL.filter(x => !row.includes(x)))[0];
-        const distract = [...row.filter(x => x !== answer), ...(size === 3 ? [outside] : [])];
-        const opts = shuffleArr([answer, ...distract]);
+        const row = ['🍎', '🍌', '🍇'];
+        const opts = ['🍌', '🍎', '🍇', '🍊'];
         q = {
-          p: `Row 1: ${r1.join(' ')} / Row 2: ${r2.join(' ')} / Row 3: ${shown.join(' ')} [ ? ]`,
+          p: `Each row needs 🍎, 🍌, and 🍇. Row 3 has: 🍇, 🍎, [ ? ]`,
           a: opts,
-          c: opts.indexOf(answer),
-          e: `Every row holds each symbol once. The symbols already in row 3 are ${shown.join(' ')}, so ${answer} is missing.`,
+          c: 0,
+          e: `Since 🍇 and 🍎 are already in the row, 🍌 is the missing symbol.`,
           tag: topic.tag
         };
       } else {
-        // Contextual cues: pick the feeling that fits the situation. Scenario and answer order are shuffled.
-        const FEEL = ['😊 Proud and calm', '😟 Startled', '😴 Sleepy', '😠 Frustrated', '😌 Relaxed', '😰 Worried', '😃 Excited', '😔 Disappointed'];
-        const SCN = [
-          ['You finished a puzzle you worked hard on.', '😊 Proud and calm', 'Completing a structured goal usually brings a calm sense of pride.'],
-          ['A loud alarm went off without any warning.', '😟 Startled', 'A sudden loud sound causes a quick startle response.'],
-          ['You have been awake since early morning and the lesson is still going.', '😴 Sleepy', 'Long tiredness shows up as sleepiness.'],
-          ['Someone keeps interrupting while you are trying to finish a task.', '😠 Frustrated', 'Repeated interruptions block progress, which often feels frustrating.'],
-          ['You are about to open a present you have wanted for weeks.', '😃 Excited', 'Looking forward to something wanted brings excitement.'],
-          ['The café you planned to visit is closed today.', '😔 Disappointed', 'A plan that falls through often feels disappointing.'],
-          ['You have a presentation tomorrow and have not practised yet.', '😰 Worried', 'An upcoming task you feel unprepared for usually causes worry.'],
-          ['You are sitting in a quiet garden listening to the birds.', '😌 Relaxed', 'Calm, quiet surroundings usually feel relaxing.'],
-          ['You missed the bus and must wait twenty minutes in the rain.', '😠 Frustrated', 'A plan knocked off track by things outside your control can feel frustrating.'],
-          ['A friend surprised you with a card on your birthday.', '😃 Excited', 'A thoughtful surprise usually brings a burst of excitement.'],
-          ['You hear a faint noise from the next room late at night.', '😰 Worried', 'An unexplained sound at night often makes people feel uneasy.'],
-          ['You finish a long day and sit down with a warm drink.', '😌 Relaxed', 'A quiet pause at the end of the day usually feels relaxing.'],
-          ['You are told the trip has been moved to next week.', '😔 Disappointed', 'Having a plan postponed often brings disappointment.'],
-          ['A door slams behind you without warning.', '😟 Startled', 'A sudden bang causes an immediate startle response.'],
-          ['Your team wins the match you were nervous about.', '😃 Excited', 'A hard-won win after nerves usually brings excitement.'],
-          ['A sudden storm cancels your outdoor plans.', '😔 Disappointed', 'Plans cancelled by something outside your control often disappoint.'],
-          ['You are called on by name in a crowded room when you were not expecting it.', '😟 Startled', 'Being singled out unexpectedly causes a startle response.'],
-          ['You have been stuck on the same problem for an hour with no progress.', '😠 Frustrated', 'Being stuck with no progress is a common cause of frustration.'],
-          ['You wake up after a long, restful night.', '😌 Relaxed', 'A full, restful night usually leaves people feeling relaxed.'],
-          ['A teacher tells you that your hard work has paid off.', '😊 Proud and calm', 'Recognition of effort brings a calm sense of pride.'],
-          ['It is late and your eyes keep closing while you read.', '😴 Sleepy', 'Heavy eyelids late at night are a sign of sleepiness.'],
-          ['A message arrives about a job interview you have tomorrow.', '😰 Worried', 'An important event coming up soon often causes worry.'],
-          ['A new puppy runs up to you, wagging its tail.', '😃 Excited', 'A playful puppy greeting usually brings a burst of excitement.'],
-          ['The shop gives you the wrong change, and you have to queue again.', '😠 Frustrated', 'Having to fix someone else\'s mistake, and wait again, is frustrating.'],
-        ];
-        // Each scenario can happen in several settings, so there are many more questions than scenarios.
-        // Questions this person has not met yet are preferred; a repeat only happens once every combination has been used.
-        const PLACES = ['At school, ', 'At home, ', 'On the bus, ', 'At work, ', 'At the park, ', 'Late at night, ', 'On a busy morning, '];
-        const combos = [];
-        for (const place of PLACES) for (const x of SCN) combos.push({ text: place + x[0].charAt(0).toLowerCase() + x[0].slice(1), feel: x[1], why: x[2] });
-        const fresh = combos.filter(c => !isSeen('Scenario: ' + c.text));
-        const chosen = (fresh.length ? fresh : combos)[Math.floor(Math.random() * (fresh.length ? fresh : combos).length)];
-        const scn = chosen.text, feel = chosen.feel, why = chosen.why;
-        const opts = shuffleArr([feel, ...shuffleArr(FEEL.filter(x => x !== feel)).slice(0, 3)]);
-        q = { p: `Scenario: ${scn}`, a: opts, c: opts.indexOf(feel), e: why, tag: topic.tag };
+        q = {
+          p: `Scenario: Finishing a practice puzzle you worked carefully on.`,
+          a: ['😊 Proud and calm', '😟 Startled', '😴 Sleepy', '😠 Frustrated'],
+          c: 0,
+          e: `Completing a structured goal typically brings a sense of calm pride.`,
+          tag: topic.tag
+        };
       }
 
       sprint.currentQ = q;
@@ -448,8 +387,8 @@ const ROOT = () => $('root');
 
     /* --- Rhythm & Beep Maths Generator --- */
     function renderBeepQuestion(lv, topic) {
-      const a = Math.floor(Math.random() * (lv + 4)) + 1;
-      const b = Math.floor(Math.random() * (lv + 4)) + 1;
+      const a = Math.floor(Math.random() * (lv + 2)) + 1;
+      const b = Math.floor(Math.random() * (lv + 2)) + 1;
       const ans = a + b;
       const opts = [ans, ans + 1, Math.max(1, ans - 1), ans + 2].sort(() => Math.random() - 0.5);
 
@@ -500,7 +439,6 @@ const ROOT = () => $('root');
 
       sprint.currentQ = {
         p: `Matrix ${size}x${size} pattern (${count} tiles)`,
-        key: `matrix ${size}:${[...targets].sort((x, y) => x - y).join(',')}`,
         a: ['Completed pattern', 'Missed tile'],
         c: 0,
         e: `Try grouping glowing tiles into pairs or corners right as they light up.`,
@@ -566,10 +504,9 @@ const ROOT = () => $('root');
 
       const stage = $('questionStage');
       stage.innerHTML = `
-        <h3 style="font-size: 1.4rem;">Slide the marker to ${a} + ${b}</h3>
-        <p style="margin-bottom: 8px;">Marker at <b id="au-tactileVal">0</b></p>
+        <h3 style="font-size: 1.4rem;">Slide the marker to solve: ${a} + ${b} = <span id="au-tactileVal">${a}</span></h3>
         <div class="tactile-track">
-          <input type="range" min="0" max="${max}" value="0" class="tactile-slider" id="au-tactileSlider" aria-label="Number line slider" />
+          <input type="range" min="0" max="${max}" value="${a}" class="tactile-slider" id="au-tactileSlider" aria-label="Number line slider" />
           <div style="display:flex; justify-content:space-between; font-weight:700; margin-top:8px;">
             <span>0</span><span>${Math.floor(max / 2)}</span><span>${max}</span>
           </div>
@@ -604,8 +541,6 @@ const ROOT = () => $('root');
     }
 
     function recordOutcome(isOk, chosenLabel) {
-      recordAnswer('autism', isOk);
-      logAnswer('autism', isOk, sprint.currentQ && (sprint.currentQ.key || sprint.currentQ.p), state.selectedTopicId, sprint.currentQ && sprint.currentQ.tag);
       sprint.locked = true;
       const topic = CM.TOPICS.find(t => t.id === state.selectedTopicId);
       const q = sprint.currentQ;
@@ -651,49 +586,6 @@ const ROOT = () => $('root');
     /********************************************************************
      * 7. END-OF-SPRINT REVIEW & EXPRESS API SYNC (Section 9 & 10)
      ********************************************************************/
-    /* Question counter: "Question 2 of 5" and five step dots in calm practice. */
-    function renderSteps() {
-      const calm = state.selectedModeId === 'calm';
-      const n = sprint.asked;
-      $('dialogMeta').textContent = calm
-        ? `Question ${Math.min(n + 1, 5)} of 5 • Score: ${sprint.score} • Keys 1–4 to answer`
-        : `Question ${n + 1} • Score: ${sprint.score} • Keys 1–4 to answer`;
-      $('steps').innerHTML = calm
-        ? Array.from({ length: 5 }, (_, i) => `<span class="step ${i < n ? 'done' : i === n ? 'now' : ''}"></span>`).join('')
-        : '';
-    }
-
-    /* Breathing break: six cycles of 4 seconds in and 4 seconds out. Low stimulant shows the steps as text only, with no motion. */
-    let breathTimer = null;
-    function stopBreath() {
-      if (breathTimer) clearInterval(breathTimer);
-      breathTimer = null;
-      const c = $('breatheCircle');
-      if (c) c.className = 'breathe-circle';
-      const b = $('breatheBtn');
-      if (b) b.disabled = false;
-    }
-    function startBreath() {
-      stopBreath();
-      const circle = $('breatheCircle'), text = $('breatheText'), btn = $('breatheBtn');
-      let step = 0;
-      const total = 12;                    // 6 cycles x (in, out)
-      btn.disabled = true;
-      const tick = () => {
-        const phase = step % 2;            // 0 = breathe in, 1 = breathe out
-        const cycle = Math.floor(step / 2) + 1;
-        circle.className = 'breathe-circle ' + (phase === 0 ? 'in' : 'out');
-        text.textContent = (phase === 0 ? 'Breathe in… ' : 'Breathe out… ') + `(cycle ${cycle} of 6)`;
-        step++;
-        if (step >= total) {
-          stopBreath();
-          text.textContent = 'Well done. Take your time before the next round.';
-        }
-      };
-      tick();
-      breathTimer = setInterval(tick, 4000);
-    }
-
     function endSprint() {
       sprint.active = false;
       if (sprint.timerId) clearInterval(sprint.timerId);
@@ -855,33 +747,20 @@ const ROOT = () => $('root');
     };
     $('closeShopBtn').onclick = () => $('shopDialog').close();
 
-    /* Stimulation modes: one place that applies the choice to the page, the notes and the buttons. */
-    function applyModes() {
-      ROOT().classList.toggle('low-stim', !!state.sensoryLow);
-      const sb = $('sensoryToggleBtn');
-      sb.setAttribute('aria-pressed', state.sensoryLow ? 'true' : 'false');
-      sb.textContent = stimLabel(state.sensoryLow);
-      const snd = $('soundToggleBtn');
-      snd.setAttribute('aria-pressed', state.soundOn === false ? 'false' : 'true');
-      snd.textContent = state.soundOn === false ? '🔇 Sound off' : '🔊 Sound on';
-      $('modeNote').textContent = stimNote(state.sensoryLow);
-    }
-
-    $('sensoryToggleBtn').onclick = () => {
-      setLow(!state.sensoryLow);
-    };
-    $('soundToggleBtn').onclick = () => {
-      state.soundOn = state.soundOn === false;
-      applyModes();
+    $('sensoryToggleBtn').onclick = (e) => {
+      state.sensoryLow = !state.sensoryLow;
+      ROOT().classList.toggle('low-stim', state.sensoryLow);
+      e.currentTarget.setAttribute('aria-pressed', state.sensoryLow ? 'true' : 'false');
+      e.currentTarget.textContent = state.sensoryLow ? '🌿 Low stimulant' : '⚡ High stimulant';
       saveStorage();
     };
-    $('breatheBtn').onclick = () => startBreath();
 
     // Boot
     loadStorage();
-    state.sensoryLow = isLow();
-    onStim(low => { state.sensoryLow = low; applyModes(); saveStorage(); });
-    applyModes();
+    // Restore the saved stimulation mode (the original page forgot it after a reload).
+    ROOT().classList.toggle('low-stim', state.sensoryLow);
+    $('sensoryToggleBtn').setAttribute('aria-pressed', state.sensoryLow ? 'true' : 'false');
+    $('sensoryToggleBtn').textContent = state.sensoryLow ? '🌿 Low stimulant' : '⚡ High stimulant';
     renderPage();
   
 /* Esc closes the dialog without pressing a button: stop the timer so the sprint does not keep running unseen. */
@@ -891,7 +770,6 @@ $('gameDialog').addEventListener('close', () => {
 });
 
 function deactivate() {
-  stopBreath();
   if (sprint.active) { sprint.active = false; if (sprint.timerId) clearInterval(sprint.timerId); }
   if ($('gameDialog').open) $('gameDialog').close();
   if ($('shopDialog').open) $('shopDialog').close();

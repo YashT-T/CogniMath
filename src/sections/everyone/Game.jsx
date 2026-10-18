@@ -2,9 +2,7 @@ import { useEffect, useReducer, useRef, useState } from 'react';
 import CM from '../../lib/questions.js';
 import review from '../../lib/review.js';
 import { MODES } from '../../lib/modes.js';
-import { recordAnswer } from '../../lib/history.js';
-import { recordSprint } from '../../lib/rewards.js';
-import SprintRewards from '../../components/SprintRewards.jsx';
+import { saveSprint } from '../../lib/progress.js';
 
 const SECS = 60;
 
@@ -20,12 +18,8 @@ export default function Game({ topic, mode, onClose }) {
     g.over = true; clearTimeout(g.adv);
     const res = review({ log: g.log, score: g.score, ghost: g.gs });
     try { localStorage.setItem('cm.recent', JSON.stringify([...g.recent, ...g.seen].slice(-80))); } catch (e) {}
-    fetch('/api/sprints', {
-      method: 'POST', headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ topic: topic.id, mode, score: g.score, ghost: g.gs, n: res.n, ok: res.ok, tags: res.by })
-    }).catch(() => {});
-    const reward = recordSprint({ topic: topic.id, mode, score: g.score, ghost: g.gs, n: res.n, ok: res.ok });
-    setR({ ...res, score: g.score, gs: g.gs, reward });
+    saveSprint({ topic: topic.id, mode, score: g.score, ghost: g.gs, n: res.n, ok: res.ok, tags: res.by });
+    setR({ ...res, score: g.score, gs: g.gs });
   };
 
   const ask = () => {
@@ -53,7 +47,6 @@ export default function Game({ topic, mode, onClose }) {
     g.locked = true; g.picked = i;
     const q = g.q, t = (Date.now() - g.t0) / 1000, ok = i === q.c;
     g.log.push({ q, pick: q.a[i], ok, t });
-    recordAnswer('everyone', ok);
     if (mode === 'rush') { if (ok) g.score++; }
     else { const win = ok && (t < g.gt || !g.gok); if (win) g.score++; else if (g.gok) g.gs++; }
     g.adv = setTimeout(ask, ok ? 500 : 900);
@@ -93,8 +86,6 @@ export default function Game({ topic, mode, onClose }) {
             <div><b>{R.n ? R.acc + '%' : '–'}</b><span>Accuracy</span></div>
             <div><b>{R.n ? R.sec + 's' : '–'}</b><span>Per question</span></div>
           </div>
-
-          <SprintRewards reward={R.reward} host={dlg.current} />
 
           {R.focus.length > 0 && <>
             <h3>What to work on</h3>

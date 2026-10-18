@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import CM from '../../lib/questions.js';
+import { getProgress } from '../../lib/progress.js';
 
 const AWAY_DAYS = 3;   // show the reminder after this many days away
 
@@ -11,7 +12,7 @@ export default function WelcomeBack({ onProgress }) {
     try { last = +localStorage.getItem('cm.last') || 0; localStorage.setItem('cm.last', Date.now()); } catch (e) {}
     const days = last ? Math.floor((Date.now() - last) / 864e5) : 0;
     if (days < AWAY_DAYS) return;
-    fetch('/api/progress').then(r => r.json()).then(d => setInfo({ days, d })).catch(() => setInfo({ days }));
+    getProgress().then(d => setInfo({ days, d })).catch(() => setInfo({ days }));
   }, []);
 
   if (!info) return null;

@@ -37,10 +37,6 @@ src/sections/everyone/               Everyone.jsx (Play / Progress switch), Play
 src/sections/dyslexia/               Dyslexia.jsx (markup), mountDyslexia.js (games), dyslexia.css
 src/sections/dyscalculia/            Dyscalculia.jsx (markup), engine.js (games), dyscalculia.css
 src/sections/autism/                 Autism.jsx (markup), mountAutism.js (games), autism.css
-src/lib/rewards.js                   Rewards engine: check-in streak, win-streak claims, XP, badges, coins, shop
-src/lib/fx.js, useRewards.js         Confetti + chimes, and the React hook for the rewards state
-src/components/RewardsChip|DailyCheckIn|RewardsHub|SprintRewards.jsx   Rewards UI
-src/rewards.css                      Rewards styles (every selector starts with .rw)
 ```
 
 ### How the spaces stay apart
@@ -116,23 +112,3 @@ Avoid: "IQ score", "detects ADHD/autism/dyscalculia", "real player matched" (unl
 - `src/components/WelcomeBack.jsx` stores the last visit in the browser (`cm.last`). If you return after 3 or more days (`AWAY_DAYS`), an in-app banner shows your sprints, accuracy, best score and the skill most worth revisiting.
 - Test it: in the browser console run `localStorage.setItem('cm.last', Date.now() - 4*864e5)`, then reload.
 - Limit: this appears when the user opens the app. Sending a system notification while the app is closed needs Web Push (a service worker, VAPID keys and a scheduled server job). Not built yet.
-
-## Rewards system
-
-One shared system for the whole app. Everything is saved in the browser under `cm.rewards.v1` (no accounts yet).
-
-**Daily check-in streak.** The first time the app opens each day (after the intro) a check-in pops up with a wobbling chest. Tapping it gives a variable reward: usually x1 coins, sometimes *Lucky x1.5*, rarely a *x3 Jackpot*, plus a streak number that slams in, coins counting up, confetti, a chime and a teaser for tomorrow. Chest coins grow with the streak (13 on day 1, up to 31 from day 7). Milestones at days 3, 7, 14, 30, 60 and 100 add bonus coins and a badge. A free **streak freeze** is earned every 7 days (hold up to 2, or buy one) and quietly covers missed days. If a streak does end, the person gets a "Fresh start" message and a badge, never a scolding.
-
-**Win-streak rewards (Everyone space).** Beat the ghost in consecutive sprints, then **claim**: win 3 (Hat-trick), 5 (High five), 7 (Lucky seven), 10 (Perfect ten), 15 (Unstoppable), 25 (Legend run). Each gives coins, XP and a badge, and every tier is repeatable. A loss resets the count, a tie keeps it, a quit or empty sprint does not count. Tiers are one table (`TIERS` in `rewards.js`).
-
-**XP and levels.** XP per sprint: 2 per correct answer, +15 for a win (+5 for a tie), +10 for 85% accuracy, +10 for a flawless sprint. 2x XP boosts can be bought. Each level needs 25 more XP than the one before.
-
-**Daily goal.** Answer 10 questions in any practice space to claim +15 coins and +20 XP (`recordAnswer` in `history.js` feeds it).
-
-**Badges and shop.** 23 badges (first sprint, wins, win streaks, daily streaks, accuracy volume, explorer, levels, fresh start). Coins buy streak freezes, 2x XP boosts and companions shown in the header.
-
-**Comfort.** Celebrations (confetti and animation) and Sounds can each be switched off in Rewards > Shop. Celebrations start off when the device asks for reduced motion.
-
-**Testing.** Open the console and run `localStorage.removeItem('cm.rewards.v1')` and reload to see day 1. To simulate tomorrow: edit the saved JSON and set `last` to yesterday's date (`YYYY-MM-DD`), or set it 3 days back to see a freeze or a fresh start.
-
-**Limits.** No server sync, so streaks live in one browser and can be cleared by the browser. The dopamine mechanics (variable reward, streak loss aversion) are deliberately gentle for this audience: freezes, no punishment, and an off switch. The three support spaces keep their own point shops; only the check-in, daily goal and header chip are shared with them.
