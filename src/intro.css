@@ -1,0 +1,20 @@
+/* Splash animation (plays once per tab session). Global, but every selector starts with .intro */
+.intro{position:fixed;inset:0;z-index:100;background:var(--ink);display:grid;place-content:center;justify-items:center;gap:6px;overflow:hidden}
+.intro svg{width:min(560px,92vw);height:auto;transform-origin:68% 32%;transition:transform .8s cubic-bezier(.6,0,1,.6)}
+.intro.out{opacity:0;pointer-events:none;transition:opacity .8s ease-in}
+.intro.out svg{transform:scale(7)}
+.intro h1{font-family:var(--display);font-weight:800;letter-spacing:-.025em;line-height:1.05;margin:0;color:#fff;font-size:clamp(2rem,6vw,3.2rem);opacity:0;animation:fadeup .6s ease-out 1.5s forwards}
+.intro .skip{position:absolute;bottom:24px;right:24px;background:none;border:2px solid #fff;color:#fff;border-radius:999px;padding:6px 16px;font-weight:700}
+.intro .stick{fill:none;stroke:#fff;stroke-width:5;stroke-linecap:round}
+.intro .d{stroke-dasharray:1;stroke-dashoffset:1;animation:draw .45s ease-out var(--d) forwards}
+.intro .man{transform-box:view-box;animation:bob 1.1s ease-in-out 1.2s infinite}
+.intro .wave{transform-box:view-box;transform-origin:200px 132px;animation:draw .45s ease-out var(--d) forwards,wave .5s ease-in-out 1.4s infinite alternate}
+.intro .sign{transform-box:fill-box;transform-origin:0 100%;animation:pop .5s cubic-bezier(.3,1.7,.5,1) 1.1s both}
+.intro .cm{font:800 26px var(--display);fill:var(--ink)}
+.intro .sym{font:800 36px var(--display);text-anchor:middle;opacity:0;transform-box:fill-box;transform-origin:center;animation:fly 1.6s ease-out var(--d) forwards}
+@keyframes draw{to{stroke-dashoffset:0}}
+@keyframes bob{50%{transform:translateY(-4px)}}
+@keyframes wave{from{transform:rotate(-14deg)}to{transform:rotate(18deg)}}
+@keyframes pop{from{transform:scale(0) rotate(-20deg)}to{transform:scale(1) rotate(0)}}
+@keyframes fly{0%{opacity:0;transform:translate(0,0) scale(.3)}20%{opacity:1}75%{opacity:1}100%{opacity:0;transform:translate(var(--x),var(--y)) scale(1.2) rotate(35deg)}}
+@keyframes fadeup{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}

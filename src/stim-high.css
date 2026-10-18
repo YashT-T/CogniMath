@@ -1,0 +1,57 @@
+/* HIGH STIMULANT mode for the Autism and Dyscalculia spaces (set on <html data-stim="high">).
+   Low stimulant is left exactly as it was. High = stronger contrast, easier reading, bigger and livelier hover, a clear focus on the question. */
+html[data-stim="high"] :is(.sec-autism, .sec-dyscalculia):not([class*="pal-"]) {
+  --ink:#0a0a1c; --muted:#2a2c47; --paper:#fffdf4; --card:#ffffff;
+  --violet:#3f2bd6; --yellow:#ffd23f; --coral:#ff7a5c; --mint:#8ee8b8; --blue:#8ccbff; --lilac:#c9bfff;
+  --ok:#0a6b3c; --bad:#a52a18;
+  --bd:3.5px solid var(--ink); --sh:7px 7px 0 var(--ink); --sh-sm:4px 4px 0 var(--ink); --sh3:4px 4px 0 var(--ink);
+}
+
+/* ---- Readability: clear font, more space, bigger targets ---- */
+html[data-stim="high"] :is(.sec-autism, .sec-dyscalculia) {
+  font-family:'Atkinson Hyperlegible', system-ui, sans-serif; font-size:1.1rem; line-height:1.75;
+  letter-spacing:.02em; word-spacing:.1em;
+}
+html[data-stim="high"] :is(.sec-autism, .sec-dyscalculia) :is(h1,h2,h3,.big,.brand) { letter-spacing:0; line-height:1.2; }
+html[data-stim="high"] :is(.sec-autism, .sec-dyscalculia) p { max-width:60ch; }
+html[data-stim="high"] :is(.sec-autism, .sec-dyscalculia) :is(.tile,.card,.mode,.opt,.cta,.btn,.pill,.ib) { min-height:52px; font-weight:700; cursor:pointer; }
+html[data-stim="high"] :is(.sec-autism, .sec-dyscalculia) .opt { font-size:1.25rem; padding-block:16px; }
+html[data-stim="high"] :is(.sec-autism, .sec-dyscalculia) small { font-size:.95rem; color:var(--muted); }
+
+/* ---- Attention: the question gets a clear frame and a highlighted prompt ---- */
+html[data-stim="high"] :is(#au-questionStage, #dc-area) { background:#fff; border:var(--bd); border-radius:18px; padding:22px; box-shadow:var(--sh); }
+html[data-stim="high"] :is(#au-questionStage h3, #dc-ins) {
+  font-size:1.5rem; line-height:1.5; display:inline; background:linear-gradient(transparent 60%, var(--yellow) 60%);
+}
+html[data-stim="high"] :is(#au-liveFeedback, #dc-fb) { font-size:1.2rem; font-weight:700; }
+html[data-stim="high"] :is(.sec-autism, .sec-dyscalculia) .hero h1 { background:linear-gradient(transparent 62%, var(--yellow) 62%); display:inline; }
+html[data-stim="high"] .sec-autism .meter { height:16px; border:var(--bd); }
+html[data-stim="high"] .sec-autism .matrix-cell.lit { box-shadow:0 0 0 4px #fff, 0 0 24px 8px var(--yellow); }
+html[data-stim="high"] :is(.sec-autism, .sec-dyscalculia) :focus-visible { outline:4px solid var(--ink) !important; outline-offset:3px; box-shadow:0 0 0 8px var(--yellow) !important; }
+
+/* ---- Blocks react: they lift, tilt and grow when you point at them ---- */
+html[data-stim="high"] :is(.sec-autism, .sec-dyscalculia) :is(.tile,.card,.mode,.stat,.panel,.opt,.btn,.cta,.pill,.ib,.chip) {
+  transition:transform .16s cubic-bezier(.3,1.6,.5,1), box-shadow .16s, background-color .12s !important;
+}
+html[data-stim="high"] :is(.sec-autism, .sec-dyscalculia) :is(.tile,.card,.mode,.stat,.panel):hover {
+  transform:translate(-4px,-8px) rotate(-1.5deg) scale(1.04) !important; box-shadow:12px 14px 0 var(--ink) !important; position:relative; z-index:2;
+}
+html[data-stim="high"] :is(.sec-autism, .sec-dyscalculia) :is(.opt:not(.ok):not(.no),.btn,.cta,.pill,.ib):hover:not(:disabled) {
+  transform:translateY(-6px) scale(1.06) !important; box-shadow:8px 10px 0 var(--ink) !important; background:var(--yellow); color:var(--ink);
+}
+html[data-stim="high"] :is(.sec-autism, .sec-dyscalculia) :is(.tile,.card,.mode,.opt,.btn,.cta,.pill,.ib):active:not(:disabled) {
+  transform:translate(3px,3px) scale(.97) !important; box-shadow:2px 2px 0 var(--ink) !important;
+}
+html[data-stim="high"] :is(.sec-autism, .sec-dyscalculia) .opt.ok { background:var(--mint); animation:sh-pop .5s ease-out; }
+html[data-stim="high"] :is(.sec-autism, .sec-dyscalculia) .opt.no { animation:sh-shake .4s ease-in-out; }
+/* A gentle ring on the main start buttons says "start here" */
+html[data-stim="high"] :is(#au-startSprintBtn, #au-playSuggestedBtn) { animation:sh-ring 2.2s ease-out infinite; }
+@keyframes sh-pop { 40% { transform:scale(1.12); } }
+@keyframes sh-shake { 25% { transform:translateX(-7px); } 75% { transform:translateX(7px); } }
+@keyframes sh-ring { 0% { box-shadow:0 0 0 0 #ffd23f; } 70%,100% { box-shadow:0 0 0 14px #ffd23f00; } }
+
+/* Reduced motion: keep the contrast and reading changes, soften the movement */
+@media (prefers-reduced-motion: reduce) {
+  html[data-stim="high"] :is(.sec-autism, .sec-dyscalculia) * { animation:none !important; }
+  html[data-stim="high"] :is(.sec-autism, .sec-dyscalculia) :is(.tile,.card,.mode,.stat,.panel,.opt,.btn,.cta,.pill,.ib):hover { transform:translateY(-3px) !important; }
+}

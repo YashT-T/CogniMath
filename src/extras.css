@@ -1,0 +1,43 @@
+/* Stickman coach, notification bell and the shared low/high stimulant rules for the Dyscalculia space. */
+.rw-chip-wrap{display:flex;align-items:center;gap:10px}
+.nb{position:relative}
+.nb-btn{width:44px;height:44px;border-radius:50%;border:2.5px solid #20213b;background:#fffefa;font-size:1.25rem;cursor:pointer;position:relative}
+.nb-dot{position:absolute;top:-6px;right:-6px;min-width:20px;height:20px;border-radius:10px;background:#b4432f;color:#fff;font:700 .72rem/20px system-ui;text-align:center;font-style:normal;padding:0 4px}
+.nb-panel{position:absolute;right:0;top:52px;width:min(340px,86vw);background:#fffefa;color:#20213b;border:2.5px solid #20213b;border-radius:16px;box-shadow:5px 5px 0 #20213b;padding:14px;z-index:60}
+.nb-panel h3{margin:0 0 8px;font-size:1.05rem}
+.nb-panel ul{list-style:none;margin:0;padding:0;display:grid;gap:8px;max-height:260px;overflow:auto}
+.nb-panel li{display:grid;gap:2px;padding:8px 10px;border-radius:10px;background:#f1efe6;font-size:.9rem}
+.nb-panel li small,.nb-set small{color:#55576f}
+.nb-set{display:grid;gap:8px;margin-top:10px;font-size:.85rem}
+.nb-act{padding:9px 12px;border-radius:10px;border:2px solid #20213b;background:#ffdc72;font-weight:700;cursor:pointer}
+.nb-act.ghost{background:#fff}
+.nb-toast{position:fixed;right:16px;bottom:16px;max-width:min(360px,88vw);background:#20213b;color:#fff;padding:12px 38px 12px 14px;border-radius:14px;z-index:70;font-size:.92rem;box-shadow:0 8px 24px #0004;animation:nb-in .3s ease-out}
+.nb-toast button{position:absolute;top:4px;right:8px;background:none;border:0;color:#fff;font-size:1.3rem;cursor:pointer}
+@keyframes nb-in{from{transform:translateY(16px);opacity:0}}
+
+.coach{position:fixed;left:14px;bottom:14px;z-index:50;display:flex;align-items:flex-end;gap:6px;color:#20213b;pointer-events:none;max-width:calc(100vw - 28px)}
+.coach>*{pointer-events:auto}
+.coach.c-autism{--coach-face:#e8e2ff}.coach.c-dyslexia{--coach-face:#dff0ff}.coach.c-dyscalculia{--coach-face:#dcf8e8}
+.coach-fig{background:none;border:0;padding:0;cursor:pointer;color:inherit;filter:drop-shadow(0 2px 0 #fff)}
+.coach-bubble{background:#fffefa;border:2.5px solid #20213b;border-radius:16px 16px 16px 4px;padding:9px 12px;font-size:.92rem;font-weight:700;max-width:230px;order:2;margin-bottom:46px}
+.coach-hide{order:3;align-self:flex-start;background:#fffefa;border:2px solid #20213b;border-radius:50%;width:24px;height:24px;line-height:1;cursor:pointer}
+.coach-show{position:fixed;left:14px;bottom:14px;z-index:50;width:44px;height:44px;border-radius:50%;border:2.5px solid #20213b;background:#fffefa;font-size:1.3rem;cursor:pointer}
+.coach:not(.still) .fig.m-cheer{animation:coach-hop .6s ease-in-out 3}
+.coach:not(.still) .fig.m-proud,.coach:not(.still) .fig.m-wave{animation:coach-sway 1.4s ease-in-out 2}
+.coach:not(.still) .fig.m-think{animation:coach-tilt 1s ease-in-out 1}
+.coach:not(.still) .coach-bubble{animation:nb-in .25s ease-out}
+@keyframes coach-hop{50%{transform:translateY(-12px)}}
+@keyframes coach-sway{50%{transform:rotate(5deg)}}
+@keyframes coach-tilt{50%{transform:rotate(-6deg)}}
+.coach.still,.coach.still *{animation:none!important;transition:none!important}
+@media(max-width:560px){.coach-bubble{font-size:.82rem;max-width:170px;margin-bottom:38px}.coach-fig svg{width:48px;height:76px}}
+@media(prefers-reduced-motion:reduce){.coach *{animation:none!important}}
+
+/* Dyscalculia: same low/high stimulant behaviour as Autism */
+.sec-dyscalculia.low-stim,.sec-dyscalculia.low-stim *{animation:none!important;transition:none!important;text-shadow:none!important}
+.sec-dyscalculia.low-stim .card:hover,.sec-dyscalculia.low-stim .opt:hover{transform:none!important}
+.sec-dyscalculia:not(.low-stim) .opt.ok{animation:dc-pop .45s ease-out}
+.sec-dyscalculia:not(.low-stim) .opt.no{animation:dc-shake .4s ease-in-out}
+.sec-dyscalculia:not(.low-stim) .card:hover,.sec-dyscalculia:not(.low-stim) .opt:hover:not(:disabled){transform:translateY(-3px) rotate(-.5deg)}
+@keyframes dc-pop{50%{transform:scale(1.08)}}
+@keyframes dc-shake{25%{transform:translateX(-5px)}75%{transform:translateX(5px)}}
