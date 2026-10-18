@@ -9,7 +9,7 @@ export default function Dyscalculia({ api }) {
   return (
     <div id="dc-root" className="sec-dyscalculia">
       <header>
-        <span className="brand">NeuroFlow</span>
+        <span className="brand" translate="no">NeuroFlow</span>
         <button className="av" id="dc-av" aria-label="Open avatar shop"><span id="dc-avE"></span><i id="dc-avB"></i></button>
         <div className="stats">
           <div className="chip" title="Streak never resets">🔥 <b id="dc-st">0</b></div>

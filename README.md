@@ -125,3 +125,18 @@ Optional. Without the two environment variables the app works as before: no logi
 6. In Supabase **Authentication > URL Configuration**, set the Site URL to your Vercel address. While testing, you can turn off **Authentication > Providers > Email > Confirm email** so new accounts can sign in at once.
 
 Signed-in users have their Everyone and Autism rounds saved to their account. Guests ("Continue without an account") keep progress in the browser. The Dyslexia and Dyscalculia spaces still save to the browser only.
+
+## Translation
+
+The Language menu (top right) translates the whole page with the free Google Website Translator. Choosing a language sets Google's `googtrans` cookie and reloads; English loads nothing from Google. Code is in `src/lib/translate.js` and `src/components/LanguagePicker.jsx`.
+
+- Word games, answers and the Grammar topic are marked `translate="no"`, because translating them would change the question.
+- Read-aloud and voice answers stay in English.
+- Translations are machine-made; the support spaces' wording is best checked by a speaker of the language before real use.
+
+## Deploying to Vercel
+
+1. Push the code to GitHub (Vercel builds from the repository).
+2. Vercel > Settings > Environment Variables: add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` for Production, Preview and Development.
+3. Supabase > Authentication > URL Configuration: set Site URL to the Vercel address and add it (with `/**`) to Redirect URLs. Keep `http://localhost:5173` there for local work.
+4. Redeploy without the build cache after any change to environment variables.

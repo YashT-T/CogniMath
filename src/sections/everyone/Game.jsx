@@ -75,7 +75,7 @@ export default function Game({ topic, mode, onClose }) {
   const left = g ? Math.max(0, g.end - Date.now()) : SECS * 1000, s = Math.ceil(left / 1000);
 
   return (
-    <dialog ref={dlg} className="game" onClose={onClose} aria-labelledby="gt">
+    <dialog ref={dlg} className="game" translate={topic.id === 'gram' ? 'no' : undefined} onClose={onClose} aria-labelledby="gt">
       {R ? (
         <div>
           <h2 id="gt">{R.headline}</h2>

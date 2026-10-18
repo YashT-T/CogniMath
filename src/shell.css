@@ -50,3 +50,12 @@ button{font:inherit;color:inherit;cursor:pointer}
 .auth-hint{display:block;color:var(--muted);margin:6px 0 0}
 .auth-msg{min-height:26px;margin:10px 0 12px;font-weight:700;color:var(--ok)}
 .auth-msg.bad{color:var(--bad)}
+
+/* language picker and Google Translate clean-up */
+.shell-lang{display:flex;align-items:center;gap:8px;font-weight:700;font-size:.9rem}
+.shell-select{font:inherit;font-weight:700;color:var(--ink);background:var(--card);border:var(--bd);border-radius:999px;padding:8px 14px;min-height:44px;max-width:200px}
+.shell-gt{position:absolute;left:-9999px;top:0;width:1px;height:1px;overflow:hidden}
+iframe.skiptranslate,.goog-te-banner-frame,#goog-gt-tt,.goog-tooltip{display:none!important}
+body{top:0!important}
+.goog-text-highlight{background:none!important;box-shadow:none!important}
+@media(max-width:560px){.shell-lang-l{display:none}}

@@ -10,7 +10,7 @@ export default function Dyslexia({ api }) {
     <div id="dy-root" className="sec-dyslexia">
       <div className="wrap">
         <header className="bar">
-          <span className="brand">WordSpark</span>
+          <span className="brand" translate="no">WordSpark</span>
           <div className="row" role="group" aria-label="Reading settings">
             <button type="button" className="pill" id="dy-sizeBtn">Text size: Normal</button>
             <button type="button" className="pill" id="dy-speedBtn">Voice speed: Normal</button>
@@ -64,7 +64,7 @@ export default function Dyslexia({ api }) {
           <div className="meter" aria-hidden="true"><div className="meter-fill" id="dy-meterFill"></div></div>
           <h3 id="dy-stagePrompt"></h3>
           <div id="dy-stageBody"></div>
-          <div id="dy-stageFeedback" className="feedback" role="status" aria-live="polite"></div>
+          <div id="dy-stageFeedback" translate="no" className="feedback" role="status" aria-live="polite"></div>
           <div className="stage-actions"><button type="button" className="cta" id="dy-nextBtn" hidden>Next question</button></div>
         </section>
 
@@ -77,7 +77,7 @@ export default function Dyslexia({ api }) {
             <div className="rstat-box"><b className="big-num" id="dy-revStars"></b><small>Stars in total</small></div>
           </div>
           <div className="focus"><b>Skill tip</b><p id="dy-revTip"></p></div>
-          <div id="dy-missBox"></div>
+          <div id="dy-missBox" translate="no"></div>
           <div className="row" style={{ marginTop: '20px' }}>
             <button type="button" className="cta" id="dy-againBtn">Play again</button>
             <button type="button" className="cta card-bg" id="dy-otherBtn">Choose another game</button>

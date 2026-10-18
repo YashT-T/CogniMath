@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Intro from './components/Intro.jsx';
 import Login from './components/Login.jsx';
+import LanguagePicker from './components/LanguagePicker.jsx';
 import { supabase } from './lib/supabase.js';
 import Everyone from './sections/everyone/Everyone.jsx';
 import Dyslexia from './sections/dyslexia/Dyslexia.jsx';
@@ -80,16 +81,20 @@ export default function App() {
     <>
       {intro && <Intro onDone={done} />}
       <header className="shell-bar shell-wrap">
-        <span className="shell-brand">CogniMath</span>
+        <span className="shell-brand" translate="no">CogniMath</span>
         <p className="shell-tag">Playful practice, in the way that suits you.</p>
+        <div className="shell-acct">
+          <LanguagePicker />
         {supabase && !needLogin && !checking && (
-          <div className="shell-acct">
+          <>
             {session
               ? <><small>{session.user.email}</small><button type="button" className="shell-pill" onClick={signOut}>Sign out</button></>
               : <button type="button" className="shell-pill" onClick={() => setGuest(false)}>Sign in</button>}
-          </div>
+          </>
         )}
+        </div>
       </header>
+      <div id="google_translate_element" className="shell-gt" aria-hidden="true"></div>
 
       {needLogin && !intro && <Login onGuest={goGuest} />}
 
