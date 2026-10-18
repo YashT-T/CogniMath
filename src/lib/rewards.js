@@ -2,8 +2,10 @@
    Everything is saved in this browser (localStorage), like the other practice spaces. No accounts yet.
    Design rules: streaks are protected by freezes, a miss is never shamed, and every effect can be turned off. */
 import CM from './questions.js';
+import { scoped } from './userScope.js';
 
-const KEY = 'cm.rewards.v1';
+const BASE = 'cm.rewards.v1';
+const key = () => scoped(BASE);           // one save slot per signed-in user (guests keep the plain key)
 export const EVT = 'cm:rewards';
 const DAY = 864e5;
 
@@ -94,17 +96,19 @@ let S = null;
 function load() {
   const b = blank();
   try {
-    const x = JSON.parse(localStorage.getItem(KEY));
+    const x = JSON.parse(localStorage.getItem(key()));
     if (x && typeof x === 'object') return { ...b, ...x, daily: { ...b.daily, ...x.daily }, totals: { ...b.totals, ...x.totals }, badges: { ...x.badges }, claimed: { ...x.claimed } };
   } catch (e) {}
   return b;
 }
 export const get = () => (S ||= load());
+// Called when a different person starts using the app: forget the loaded state so the next read uses their slot.
+export const resetRewards = () => { S = null; };
 function save() {
-  try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {}
+  try { localStorage.setItem(key(), JSON.stringify(S)); } catch (e) {}
   dispatchEvent(new CustomEvent(EVT));
 }
-if (typeof addEventListener === 'function') addEventListener('storage', e => { if (e.key === KEY) { S = null; dispatchEvent(new CustomEvent(EVT)); } });
+if (typeof addEventListener === 'function') addEventListener('storage', e => { if (e.key === key()) { S = null; dispatchEvent(new CustomEvent(EVT)); } });
 
 /* ---------- internals ---------- */
 function award(out, id) {

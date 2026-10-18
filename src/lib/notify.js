@@ -4,11 +4,13 @@
 import { getDays } from './history.js';
 import { status, GOAL } from './rewards.js';
 import { userId } from './questionMemory.js';
+import { scoped } from './userScope.js';
 
-const K = 'cm.notes.v1', SECS = ['autism', 'dyslexia', 'dyscalculia', 'everyone'];
+const SECS = ['autism', 'dyslexia', 'dyscalculia', 'everyone'];
+const K = () => scoped('cm.notes.v1');   // per signed-in user
 const today = () => status().today;
-const load = () => { try { return JSON.parse(localStorage.getItem(K)) || {}; } catch (e) { return {}; } };
-const save = s => { try { localStorage.setItem(K, JSON.stringify(s)); } catch (e) {} dispatchEvent(new CustomEvent('cm:notes')); };
+const load = () => { try { return JSON.parse(localStorage.getItem(K())) || {}; } catch (e) { return {}; } };
+const save = s => { try { localStorage.setItem(K(), JSON.stringify(s)); } catch (e) {} dispatchEvent(new CustomEvent('cm:notes')); };
 
 export const getNotes = () => { const s = load(); return { items: s.items || [], sys: !!s.sys, hour: s.hour == null ? 18 : s.hour }; };
 export const unread = () => getNotes().items.filter(n => !n.read).length;

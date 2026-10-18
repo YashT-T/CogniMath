@@ -14,7 +14,8 @@ import RewardsHub from './components/RewardsHub.jsx';
 import NotifyBell from './components/NotifyBell.jsx';
 import Coach from './components/Stickman.jsx';
 import { initNotify } from './lib/notify.js';
-import { checkInPreview } from './lib/rewards.js';
+import { checkInPreview, resetRewards, EVT as REWARDS_EVT } from './lib/rewards.js';
+import { setScopeUser } from './lib/userScope.js';
 
 /* One page, four practice spaces. Only the chosen space is shown; the others stay loaded but hidden,
    so each one keeps its own progress and settings. The choice is saved in the URL hash (#dyslexia) and in localStorage. */
@@ -53,22 +54,29 @@ export default function App() {
   // The practice spaces stay mounted (just hidden) while the login page shows, so their games keep working after sign-in.
   const needLogin = !!supabase && session === null && !guest;
   const checking = !!supabase && session === undefined;
+  // Streak, coins, level, history and notifications belong to whoever is signed in (guests share the plain browser slot).
+  // The switch happens during render so nothing ever paints another person's numbers; the event then refreshes any open widgets.
+  const uid = session && session.user ? session.user.id : null;
+  if (setScopeUser(uid)) resetRewards();
+  useEffect(() => { dispatchEvent(new CustomEvent(REWARDS_EVT)); }, [uid]);
+  const inApp = !needLogin && !checking;   // false on the sign-in page
 
   // Rewards: today's check-in pops up once per day after the intro; the hub opens from the header or from anywhere via an event.
   const [daily, setDaily] = useState(false);
   const [hub, setHub] = useState(null);           // null (closed) or the open tab: 'streak' | 'wins' | 'badges' | 'shop'
   useEffect(() => {
-    if (intro || !checkInPreview().due) return;
+    if (intro || !inApp || !checkInPreview().due) return;
     const id = setTimeout(() => setDaily(true), 500);
     return () => clearTimeout(id);
-  }, [intro]);
+  }, [intro, inApp, uid]);
   useEffect(() => {
     const on = e => setHub(e.detail || 'streak');
     addEventListener('cm:open-rewards', on);
     return () => removeEventListener('cm:open-rewards', on);
   }, []);
 
-  useEffect(() => initNotify(), []);
+  // Reminders and the inbox are per user, so start them only once we know who is using the app (and restart on a switch).
+  useEffect(() => (inApp ? initNotify() : undefined), [inApp, uid]);
 
   const [sec, setSec] = useState(fromUrl);
   const prev = useRef(sec);
@@ -112,10 +120,10 @@ export default function App() {
             <span className="shell-brand" translate="no">CogniMath</span>
             <p className="shell-tag">Playful practice, in the way that suits you.</p>
           </div>
-          <div className="rw-chip-wrap"><RewardsChip onClick={() => setHub('streak')} /><NotifyBell /></div>
-          <div className="shell-acct">
+          {inApp && <div className="rw-chip-wrap"><RewardsChip onClick={() => setHub('streak')} /><NotifyBell /></div>}
+          <div className={'shell-acct' + (inApp ? '' : ' alone')}>
             <LanguagePicker />
-            {supabase && !needLogin && !checking && (
+            {supabase && inApp && (
               session
                 ? <><small>{session.user.email}</small><button type="button" className="shell-pill" onClick={signOut}>Sign out</button></>
                 : <button type="button" className="shell-pill" onClick={() => setGuest(false)}>Sign in</button>

@@ -1,16 +1,17 @@
 /* Daily practice history for every space, saved in this browser (localStorage).
    Each answer is counted under today's date, so the app can compare days and show improvement. */
 import { noteAnswer } from './rewards.js';
-const KEY = 'cm.history.v1';
+import { scoped } from './userScope.js';
+const key = () => scoped('cm.history.v1');   // per signed-in user
 
 const pad = n => String(n).padStart(2, '0');
 export const dayKey = (d = new Date()) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 
 function load() {
-  try { return JSON.parse(localStorage.getItem(KEY)) || {}; } catch (e) { return {}; }
+  try { return JSON.parse(localStorage.getItem(key())) || {}; } catch (e) { return {}; }
 }
 function store(h) {
-  try { localStorage.setItem(KEY, JSON.stringify(h)); } catch (e) {}
+  try { localStorage.setItem(key(), JSON.stringify(h)); } catch (e) {}
 }
 
 /* Call once per answered question. ok = true when the answer was right. */

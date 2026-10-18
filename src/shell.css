@@ -136,3 +136,6 @@ body{top:0!important}
 
 .shell-top-in .shell-acct{margin-left:0}
 .shell-top-in{flex-wrap:wrap}
+
+/* sign-in page: no rewards chip, so the language picker sits on the right */
+.shell-top-in .shell-acct.alone{margin-left:auto}
