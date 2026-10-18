@@ -1,3 +1,6 @@
+import { recordAnswer } from '../../lib/history.js';
+import { isSeen, markSeen, logAnswer } from '../../lib/questionMemory.js';
+import { isLow, setLow, onStim, stimLabel } from '../../lib/stim.js';
 /* NeuroFlow dyscalculia engine: six games, levels, CRA views, hesitation monitor, progress and settings.
    Ported from the single-file module; it draws into the elements rendered by Dyscalculia.jsx.
    Element ids are prefixed "dc-" (see $ below) so they cannot clash with the other sections. */
@@ -86,7 +89,7 @@ function sound(ok){buzz(ok?30:10);if(!S.a.snd)return;try{ac=ac||new(window.Audio
 /* ---------- Core: answers, levels, points ---------- */
 function fb(m,c){const e=$('fb');e.textContent=m;e.className='fb '+(c||'')}
 function answer(ok,hint,btn,et){
-  if(!S.cur||S.cur.done)return;const g=S.g[S.cur.id];S.hist=[...S.hist,ok].slice(-6);g.a++;
+  if(!S.cur||S.cur.done)return;const g=S.g[S.cur.id];S.hist=[...S.hist,ok].slice(-6);g.a++;recordAnswer('dyscalculia',ok);logAnswer('dyscalculia',ok,S.cur.sig,S.cur.id);
   if(ok){S.cur.done=true;if(btn)btn.classList.add('ok');clearTimeout(hz);S.cur.cor=(S.cur.cor||0)+1;if(S.cur.shown)S.help[S.cur.shown]=(S.help[S.cur.shown]||0)+1;g.c++;const p=10*g.lv;S.pts+=p;S.st++;g.wr=0;let m='Nice! +'+p+' points.';
     if(g.pause>0)g.pause--;else g.run++;
     if(g.run>=3){if(g.lv<5){g.lv++;S.over=null;S.rem=null;m+=' Level up! Now level '+g.lv+'.'}g.run=0}
@@ -96,7 +99,9 @@ function answer(ok,hint,btn,et){
     if(btn){btn.disabled=true;btn.classList.add('no')}sound(0);fb(m,'hint')}
   upd();save();
 }
-function next(){clr();S.cur.done=false;S.q=null;S.cur.q0=Date.now();S.cur.pz=0;S.cur.shown=null;$('rep').hidden=true;const a=$('area');a.innerHTML='';fb('Take your time. There is no timer.');$('ins').textContent=gm(S.cur.id).make(a,S.g[S.cur.id].lv);craBar();upd();poke()}
+/* Redraws (up to 12 times) until the question has not been served to this person before; the server keeps the master list. */
+function freshMake(a,g,lv){let t='';for(let i=0;i<12;i++){clr();a.innerHTML='';t=g.make(a,lv);S.cur.sig='dc:'+g.id+':'+(a.innerHTML.replace(/\s+/g,' ').slice(0,260));if(!isSeen(S.cur.sig))break}markSeen(S.cur.sig);return t}
+function next(){clr();S.cur.done=false;S.q=null;S.cur.q0=Date.now();S.cur.pz=0;S.cur.shown=null;$('rep').hidden=true;const a=$('area');a.innerHTML='';fb('Take your time. There is no timer.');$('ins').textContent=freshMake(a,gm(S.cur.id),S.g[S.cur.id].lv);craBar();upd();poke()}
 function craBar(){const b=$('cra');b.innerHTML='';if(!CR[S.cur.id])return;const c=cs(S.cur.id);['🧱 Blocks','🖼 Pictures','🔢 Numbers'].forEach((n,i)=>{const x=h('button','btn',n);x.setAttribute('aria-pressed',i==c);x.onclick=()=>{S.over=i;next()};b.append(x)})}
 function open(id,c){S.over=c==null?null:c;S.cur={id,t0:Date.now(),done:false,cor:0};clearInterval(ght);ght=setInterval(ghost,1000);view('stage');ghost();$('gt').textContent=gm(id).ic+' '+gm(id).name;next()}
 
@@ -179,7 +184,7 @@ function dash(){const ai=$('ai'),gr=$('grid');ai.innerHTML='';const d=h('div');l
   else{const r=rec();d.append(h('b','','Recommended next: '+r.g.ic+' '+r.g.name),h('p','',r.why));b=h('button','btn p','Play');b.onclick=()=>open(r.g.id)}
   ai.append(d,b);gr.innerHTML='';G.forEach(g=>{const c=h('button','card'),t=S.g[g.id].t;c.append(h('span','ic',g.ic),h('b','',g.name),h('small','',g.blurb),h('small','','Level '+S.g[g.id].lv+', '+(t<60?t+' sec':Math.round(t/60)+' min')+' played'));c.onclick=()=>open(g.id);gr.append(c)})}
 function upd(){$('st').textContent=S.st;$('pt').textContent=S.pts;$('avE').textContent=S.av;$('avB').textContent=S.bd;
-  $('mode').textContent=S.hi?'⚡ High stimulation':'🌿 Low stimulation';$('mode').setAttribute('aria-pressed',S.hi);
+  $('mode').textContent=stimLabel(!S.hi);$('mode').setAttribute('aria-pressed',S.hi);
   if(S.cur&&S.g[S.cur.id]){const g=S.g[S.cur.id];$('lvl').textContent='Level '+g.lv+' of 5, '+g.run+'/3 in a row'}}
 
 /* ---------- Sensory toggle ---------- */
@@ -196,10 +201,10 @@ let started=false;
 export function start(){
   if(started)return;started=true;
   $('back').onclick=()=>{clr();clearTimeout(hz);clearInterval(ght);if(S.cur&&S.g[S.cur.id]){const g=S.g[S.cur.id],el=(Date.now()-S.cur.t0)/1000;g.t+=Math.round(el);if(S.cur.cor>0)g.spc=el/S.cur.cor;S.last=S.cur.id}S.cur=null;S.over=null;save();view('dash');dash();upd()};
-  $('mode').onclick=()=>{S.hi=!S.hi;ROOT().classList.toggle('high-stim',S.hi);save();upd();sound(1)};
+  $('mode').onclick=()=>{setLow(S.hi);sound(1)};onStim(low=>{S.hi=!low;ROOT().classList.toggle('low-stim',low);save();upd()});
   $('av').onclick=shop;$('mclose').onclick=()=>$('modal').hidden=true;
   addEventListener('keydown',e=>{if(e.key==='Escape')$('modal').hidden=true});
-  $('bp').onclick=prog;$('bs').onclick=sets;$('area').addEventListener('pointerdown',poke);$('area').addEventListener('keydown',poke);pal();ROOT().classList.toggle('high-stim',S.hi);dash();upd();
+  $('bp').onclick=prog;$('bs').onclick=sets;$('area').addEventListener('pointerdown',poke);$('area').addEventListener('keydown',poke);pal();S.hi=!isLow();ROOT().classList.toggle('low-stim',!S.hi);dash();upd();
 }
 
 /* Called by the page when this section is hidden: same as pressing "Back to menu", and close any dialog. */

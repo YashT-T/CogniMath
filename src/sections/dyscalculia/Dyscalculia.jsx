@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { start, stop } from './engine.js';
+import ProgressCompare from '../../components/ProgressCompare.jsx';
 import './dyscalculia.css';
 
 /* Dyscalculia section (NeuroFlow). engine.js draws the games into the elements below, found by id.
@@ -23,6 +24,7 @@ export default function Dyscalculia({ api }) {
       </header>
 
       <main id="dc-dash">
+        <ProgressCompare section="dyscalculia" />
         <section className="hero">
           <h1>Numbers, one gentle step at a time.</h1>
           <p>Pick a game, take your time, and see what to practise next. There is no timer.</p>

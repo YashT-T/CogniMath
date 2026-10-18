@@ -2,6 +2,7 @@ import { useRef, useState } from 'react';
 import CM from '../../lib/questions.js';
 import { MODES } from '../../lib/modes.js';
 import Game from './Game.jsx';
+import { WinMeter } from '../../components/SprintRewards.jsx';
 
 export default function Play() {
   const T = CM.TOPICS;
@@ -67,6 +68,7 @@ export default function Play() {
           <button className="cta" disabled={busy} onClick={find}>
             {busy ? 'Checking for a live player…' : matched ? 'Start sprint' : 'Find my opponent'}
           </button>
+          <WinMeter />
         </aside>
       </div>
 

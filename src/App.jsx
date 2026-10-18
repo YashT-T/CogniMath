@@ -7,6 +7,14 @@ import Everyone from './sections/everyone/Everyone.jsx';
 import Dyslexia from './sections/dyslexia/Dyslexia.jsx';
 import Dyscalculia from './sections/dyscalculia/Dyscalculia.jsx';
 import Autism from './sections/autism/Autism.jsx';
+import HowItHelps from './components/HowItHelps.jsx';
+import RewardsChip from './components/RewardsChip.jsx';
+import DailyCheckIn from './components/DailyCheckIn.jsx';
+import RewardsHub from './components/RewardsHub.jsx';
+import NotifyBell from './components/NotifyBell.jsx';
+import Coach from './components/Stickman.jsx';
+import { initNotify } from './lib/notify.js';
+import { checkInPreview } from './lib/rewards.js';
 
 /* One page, four practice spaces. Only the chosen space is shown; the others stay loaded but hidden,
    so each one keeps its own progress and settings. The choice is saved in the URL hash (#dyslexia) and in localStorage. */
@@ -26,9 +34,10 @@ const fromUrl = () => {
 };
 
 export default function App() {
-  // The intro plays once per browser tab session.
-  const [intro, setIntro] = useState(() => { try { return !sessionStorage.getItem('cm.intro'); } catch (e) { return false; } });
-  const done = () => { try { sessionStorage.setItem('cm.intro', '1'); } catch (e) {} setIntro(false); };
+  // The intro plays every time the app opens (skipped automatically when reduced motion is on).
+  const [intro, setIntro] = useState(true);
+  const done = () => setIntro(false);
+  const [how, setHow] = useState(false);
 
   // Accounts: only active when the Supabase environment variables are set. undefined = still checking.
   const [session, setSession] = useState(supabase ? undefined : null);
@@ -44,6 +53,22 @@ export default function App() {
   // The practice spaces stay mounted (just hidden) while the login page shows, so their games keep working after sign-in.
   const needLogin = !!supabase && session === null && !guest;
   const checking = !!supabase && session === undefined;
+
+  // Rewards: today's check-in pops up once per day after the intro; the hub opens from the header or from anywhere via an event.
+  const [daily, setDaily] = useState(false);
+  const [hub, setHub] = useState(null);           // null (closed) or the open tab: 'streak' | 'wins' | 'badges' | 'shop'
+  useEffect(() => {
+    if (intro || !checkInPreview().due) return;
+    const id = setTimeout(() => setDaily(true), 500);
+    return () => clearTimeout(id);
+  }, [intro]);
+  useEffect(() => {
+    const on = e => setHub(e.detail || 'streak');
+    addEventListener('cm:open-rewards', on);
+    return () => removeEventListener('cm:open-rewards', on);
+  }, []);
+
+  useEffect(() => initNotify(), []);
 
   const [sec, setSec] = useState(fromUrl);
   const prev = useRef(sec);
@@ -80,18 +105,22 @@ export default function App() {
   return (
     <>
       {intro && <Intro onDone={done} />}
-      <header className="shell-bar shell-wrap">
-        <span className="shell-brand" translate="no">CogniMath</span>
-        <p className="shell-tag">Playful practice, in the way that suits you.</p>
-        <div className="shell-acct">
-          <LanguagePicker />
-        {supabase && !needLogin && !checking && (
-          <>
-            {session
-              ? <><small>{session.user.email}</small><button type="button" className="shell-pill" onClick={signOut}>Sign out</button></>
-              : <button type="button" className="shell-pill" onClick={() => setGuest(false)}>Sign in</button>}
-          </>
-        )}
+      <header className="shell-top">
+        <div className="shell-wrap shell-top-in">
+          <div className="shell-logo" aria-hidden="true">+</div>
+          <div>
+            <span className="shell-brand" translate="no">CogniMath</span>
+            <p className="shell-tag">Playful practice, in the way that suits you.</p>
+          </div>
+          <div className="rw-chip-wrap"><RewardsChip onClick={() => setHub('streak')} /><NotifyBell /></div>
+          <div className="shell-acct">
+            <LanguagePicker />
+            {supabase && !needLogin && !checking && (
+              session
+                ? <><small>{session.user.email}</small><button type="button" className="shell-pill" onClick={signOut}>Sign out</button></>
+                : <button type="button" className="shell-pill" onClick={() => setGuest(false)}>Sign in</button>
+            )}
+          </div>
         </div>
       </header>
       <div id="google_translate_element" className="shell-gt" aria-hidden="true"></div>
@@ -101,7 +130,12 @@ export default function App() {
       <div hidden={needLogin || checking}>
 
       <nav className="shell-wrap" aria-label="Choose a practice space">
-        <h2 className="shell-h">Choose your practice space</h2>
+        <div className="shell-head">
+          <h2 className="shell-h">Choose your practice space</h2>
+          <button type="button" className="shell-how" onClick={() => setHow(true)}>
+            <span aria-hidden="true">✨</span> How {cur.name} helps
+          </button>
+        </div>
         <div className="shell-picks">
           {SECTIONS.map(s => (
             <button key={s.id} type="button" className="shell-pick" style={{ '--c': s.color }}
@@ -120,6 +154,11 @@ export default function App() {
         <div hidden={sec !== 'dyscalculia'}><Dyscalculia api={apis.dyscalculia} /></div>
         <div hidden={sec !== 'autism'}><Autism api={apis.autism} /></div>
       </div>
+
+      {['autism', 'dyslexia', 'dyscalculia'].includes(sec) && !intro && <Coach section={sec} />}
+      <HowItHelps section={sec} open={how} onClose={() => setHow(false)} />
+      <DailyCheckIn open={daily} onClose={() => setDaily(false)} onHub={() => { setDaily(false); setHub('streak'); }} />
+      <RewardsHub tab={hub} onTab={setHub} onClose={() => setHub(null)} onCheckIn={() => { setHub(null); setDaily(true); }} />
 
       <p className="shell-foot shell-wrap">
         Prototype for practice. CogniMath does not diagnose anything and does not measure intelligence.
