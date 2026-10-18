@@ -1,6 +1,8 @@
 /* Autism section: predictable, low-stimulation practice with an untimed mode, sound and avatar upgrades.
    Wrapped in mount() so it only touches the DOM once the section has rendered.
    Every element id is prefixed "au-" so it cannot clash with the other sections. */
+import { saveSprint } from '../../lib/progress.js';
+
 export default function mountAutism() {
 const $ = id => document.getElementById('au-' + id);
 const ROOT = () => $('root');
@@ -627,20 +629,16 @@ const ROOT = () => $('root');
       }
 
       // POST to /api/sprints per Section 2 & 10 (with .catch(() => {}) so UI never breaks)
-      fetch('/api/sprints', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          topic: topic.id,
-          mode: state.selectedModeId,
-          score: sprint.score,
-          ghost: topic.ghost,
-          n: sprint.asked,
-          ok: sprint.correctCount,
-          tags: sprint.tags,
-          section: 'autism'
-        })
-      }).catch(() => {});
+      saveSprint({
+        topic: topic.id,
+        mode: state.selectedModeId,
+        score: sprint.score,
+        ghost: topic.ghost,
+        n: sprint.asked,
+        ok: sprint.correctCount,
+        tags: sprint.tags,
+        section: 'autism'
+      });
     }
 
     /********************************************************************

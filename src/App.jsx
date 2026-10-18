@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Intro from './components/Intro.jsx';
+import Login from './components/Login.jsx';
+import { supabase } from './lib/supabase.js';
 import Everyone from './sections/everyone/Everyone.jsx';
 import Dyslexia from './sections/dyslexia/Dyslexia.jsx';
 import Dyscalculia from './sections/dyscalculia/Dyscalculia.jsx';
@@ -26,6 +28,21 @@ export default function App() {
   // The intro plays once per browser tab session.
   const [intro, setIntro] = useState(() => { try { return !sessionStorage.getItem('cm.intro'); } catch (e) { return false; } });
   const done = () => { try { sessionStorage.setItem('cm.intro', '1'); } catch (e) {} setIntro(false); };
+
+  // Accounts: only active when the Supabase environment variables are set. undefined = still checking.
+  const [session, setSession] = useState(supabase ? undefined : null);
+  const [guest, setGuest] = useState(() => { try { return localStorage.getItem('cm.guest') === '1'; } catch (e) { return false; } });
+  useEffect(() => {
+    if (!supabase) return;
+    supabase.auth.getSession().then(({ data }) => setSession(data.session)).catch(() => setSession(null));
+    const { data } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
+    return () => data.subscription.unsubscribe();
+  }, []);
+  const goGuest = () => { try { localStorage.setItem('cm.guest', '1'); } catch (e) {} setGuest(true); };
+  const signOut = async () => { try { localStorage.removeItem('cm.guest'); } catch (e) {} setGuest(false); await supabase.auth.signOut(); };
+  // The practice spaces stay mounted (just hidden) while the login page shows, so their games keep working after sign-in.
+  const needLogin = !!supabase && session === null && !guest;
+  const checking = !!supabase && session === undefined;
 
   const [sec, setSec] = useState(fromUrl);
   const prev = useRef(sec);
@@ -55,7 +72,7 @@ export default function App() {
     }
     b && b.activate && b.activate();
     prev.current = sec;
-  }, [sec]);
+  }, [sec, needLogin]);
 
   const cur = SECTIONS.find(s => s.id === sec);
 
@@ -65,7 +82,18 @@ export default function App() {
       <header className="shell-bar shell-wrap">
         <span className="shell-brand">CogniMath</span>
         <p className="shell-tag">Playful practice, in the way that suits you.</p>
+        {supabase && !needLogin && !checking && (
+          <div className="shell-acct">
+            {session
+              ? <><small>{session.user.email}</small><button type="button" className="shell-pill" onClick={signOut}>Sign out</button></>
+              : <button type="button" className="shell-pill" onClick={() => setGuest(false)}>Sign in</button>}
+          </div>
+        )}
       </header>
+
+      {needLogin && !intro && <Login onGuest={goGuest} />}
+
+      <div hidden={needLogin || checking}>
 
       <nav className="shell-wrap" aria-label="Choose a practice space">
         <h2 className="shell-h">Choose your practice space</h2>
@@ -90,8 +118,10 @@ export default function App() {
 
       <p className="shell-foot shell-wrap">
         Prototype for practice. CogniMath does not diagnose anything and does not measure intelligence.
-        Opponents are saved sample runs, not live players. Progress for the three support spaces is kept in this browser only.
+        Opponents are saved sample runs, not live players.{' '}
+        {supabase ? 'Signed-in progress is saved to your account; guest progress stays in this browser.' : 'Progress is kept in this browser.'}
       </p>
+      </div>
     </>
   );
 }

@@ -112,3 +112,16 @@ Avoid: "IQ score", "detects ADHD/autism/dyscalculia", "real player matched" (unl
 - `src/components/WelcomeBack.jsx` stores the last visit in the browser (`cm.last`). If you return after 3 or more days (`AWAY_DAYS`), an in-app banner shows your sprints, accuracy, best score and the skill most worth revisiting.
 - Test it: in the browser console run `localStorage.setItem('cm.last', Date.now() - 4*864e5)`, then reload.
 - Limit: this appears when the user opens the app. Sending a system notification while the app is closed needs Web Push (a service worker, VAPID keys and a scheduled server job). Not built yet.
+
+## Accounts and database (Supabase)
+
+Optional. Without the two environment variables the app works as before: no login page, and progress is kept in the browser.
+
+1. Create a project at supabase.com.
+2. In **SQL Editor**, paste and run `supabase/schema.sql`. It creates the `sprints` table and row-level security so each user only sees their own rows.
+3. In **Project Settings > API**, copy the Project URL and the `anon` public key.
+4. Locally: copy `.env.example` to `.env.local` and fill in both values, then restart `npm run dev`.
+5. On Vercel: **Settings > Environment Variables**, add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY`, then redeploy (the values are read at build time).
+6. In Supabase **Authentication > URL Configuration**, set the Site URL to your Vercel address. While testing, you can turn off **Authentication > Providers > Email > Confirm email** so new accounts can sign in at once.
+
+Signed-in users have their Everyone and Autism rounds saved to their account. Guests ("Continue without an account") keep progress in the browser. The Dyslexia and Dyscalculia spaces still save to the browser only.

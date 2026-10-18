@@ -29,3 +29,24 @@ button{font:inherit;color:inherit;cursor:pointer}
 @media(max-width:880px){.shell-picks{grid-template-columns:1fr 1fr}}
 @media(max-width:560px){.shell-wrap{padding-left:16px;padding-right:16px}.shell-picks{grid-template-columns:1fr}.shell-pick{min-height:0}}
 @media(prefers-reduced-motion:reduce){.shell-pick{transition:none}}
+
+/* account area and login page */
+.shell-acct{margin-left:auto;display:flex;align-items:center;gap:10px}
+.shell-acct small{color:var(--muted);font-size:.85rem}
+.shell-pill{border:var(--bd);border-radius:999px;padding:8px 16px;min-height:44px;background:var(--card);font-weight:700}
+.shell-pill[aria-pressed=true]{background:var(--ink);color:#fff}
+.shell-cta{width:100%;background:var(--yellow);color:var(--ink);border:var(--bd);border-radius:14px;font:800 1.05rem var(--display);padding:13px 18px;min-height:48px;box-shadow:var(--sh-sm);transition:transform .1s,box-shadow .1s}
+.shell-cta:hover:not(:disabled){transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--ink)}
+.shell-cta:active:not(:disabled){transform:translate(3px,3px);box-shadow:0 0 0 var(--ink)}
+.shell-cta:disabled{opacity:.75;cursor:progress}
+.shell-link{background:none;border:0;color:var(--violet);font-weight:700;text-decoration:underline;text-underline-offset:3px;padding:12px 0;min-height:44px}
+.auth{padding-top:36px;padding-bottom:40px}
+.auth-h{font:800 clamp(2.4rem,7vw,4.2rem) var(--display);letter-spacing:-.025em;line-height:1.05;margin:0 0 12px}
+.auth-p{max-width:50ch;color:var(--muted);margin:0 0 26px}
+.auth-card{max-width:440px;background:var(--card);border:var(--bd);border-radius:20px;box-shadow:var(--sh);padding:24px;margin-bottom:14px}
+.auth-tabs{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+.auth-label{display:block;font-weight:700;margin:12px 0 6px}
+.auth-input{width:100%;font:inherit;color:var(--ink);background:#fff;border:var(--bd);border-radius:12px;padding:10px 14px;min-height:46px}
+.auth-hint{display:block;color:var(--muted);margin:6px 0 0}
+.auth-msg{min-height:26px;margin:10px 0 12px;font-weight:700;color:var(--ok)}
+.auth-msg.bad{color:var(--bad)}
