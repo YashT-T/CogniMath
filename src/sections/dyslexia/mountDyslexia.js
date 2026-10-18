@@ -1,3 +1,5 @@
+import { recordAnswer } from '../../lib/history.js';
+import { freshPick } from '../../lib/questionMemory.js';
 /* Dyslexia section (WordSpark): reading and sound games with voice, big text and calm mode.
    Wrapped in mount() so it only touches the DOM once the section has rendered.
    Every element id is prefixed "dy-" so it cannot clash with the other sections. */
@@ -15,7 +17,7 @@ const shuffle = arr => {
   for (let i = a.length - 1; i > 0; i--) { const j = rnd(i + 1); [a[i], a[j]] = [a[j], a[i]]; }
   return a;
 };
-const pickN = (arr, n) => shuffle(arr).slice(0, n);
+const pickN = (arr, n) => freshPick(arr, n, x => 'dx:' + (Array.isArray(x) ? x.join('|') : typeof x === 'object' ? JSON.stringify(x) : x));
 const el = (tag, cls, text) => {
   const e = document.createElement(tag);
   if (cls) e.className = cls;
@@ -228,11 +230,24 @@ const SOUND_SETS = [
   { say: 'tree', opts: ['free', 'tray', 'trip', 'tree'] },
   { say: 'pen', opts: ['pan', 'pin', 'ten', 'pen'] },
   { say: 'rain', opts: ['run', 'ran', 'rang', 'rain'] },
-  { say: 'bell', opts: ['ball', 'bill', 'bowl', 'bell'] }
+  { say: 'bell', opts: ['ball', 'bill', 'bowl', 'bell'] },
+  { say: 'cat', opts: ['bat', 'cap', 'cot', 'cat'] },
+  { say: 'dog', opts: ['dig', 'dug', 'fog', 'dog'] },
+  { say: 'king', opts: ['ring', 'sing', 'kind', 'king'] },
+  { say: 'star', opts: ['stir', 'scar', 'start', 'star'] },
+  { say: 'frog', opts: ['flag', 'drag', 'drop', 'frog'] },
+  { say: 'milk', opts: ['silk', 'mild', 'melt', 'milk'] },
+  { say: 'nest', opts: ['best', 'next', 'rest', 'nest'] },
+  { say: 'duck', opts: ['dock', 'deck', 'dusk', 'duck'] },
+  { say: 'green', opts: ['grin', 'grain', 'groan', 'green'] },
+  { say: 'snake', opts: ['snack', 'stake', 'shake', 'snake'] },
+  { say: 'clock', opts: ['click', 'block', 'crock', 'clock'] },
+  { say: 'spoon', opts: ['spin', 'soon', 'swoon', 'spoon'] }
 ];
 
 const SPEAK_WORDS = ['cat', 'dog', 'sun', 'fish', 'frog', 'cake', 'moon', 'book', 'tree', 'house',
-  'water', 'apple', 'bread', 'green', 'happy', 'jump', 'school', 'friend', 'bird', 'shoe'];
+  'water', 'apple', 'bread', 'green', 'happy', 'jump', 'school', 'friend', 'bird', 'shoe',
+  'star', 'chair', 'spoon', 'flower', 'rabbit', 'garden', 'pencil', 'orange', 'yellow', 'candle'];
 
 const MIRROR = [
   { t: 'b', set: ['b', 'd', 'p', 'q'], tip: 'b has its bump on the right side. d has its bump on the left side.' },
@@ -242,20 +257,32 @@ const MIRROR = [
   { t: 'm', set: ['m', 'w', 'n', 'u'], tip: 'm has two humps on top, like two small hills.' },
   { t: 'w', set: ['w', 'm', 'u', 'v'], tip: 'w is an upside-down m, with its points at the bottom.' },
   { t: 'n', set: ['n', 'u', 'm', 'h'], tip: 'n has one hump, and its stem is on the left.' },
-  { t: 'u', set: ['u', 'n', 'v', 'w'], tip: 'u is a cup shape. n is the same hump turned upside down.' }
+  { t: 'u', set: ['u', 'n', 'v', 'w'], tip: 'u is a cup shape. n is the same hump turned upside down.' },
+  { t: '6', set: ['6', '9', '8', '0'], tip: '6 has its loop at the bottom. 9 has its loop at the top.' },
+  { t: '9', set: ['9', '6', '3', '8'], tip: '9 has its loop at the top. 6 has its loop at the bottom.' },
+  { t: '2', set: ['2', '5', '3', '7'], tip: '2 curves at the top and has a flat base. 5 has a flat top instead.' },
+  { t: '5', set: ['5', '2', '3', '9'], tip: '5 has a flat top and curves at the bottom. 2 curves at the top instead.' },
+  { t: 's', set: ['s', 'z', 'c', 'e'], tip: 's curves gently like a snake. z is made of straight lines with sharp corners.' },
+  { t: 'z', set: ['z', 's', 'n', 'w'], tip: 'z is made of straight lines with sharp corners, not a curve like s.' },
+  { t: 'g', set: ['g', 'q', 'y', 'j'], tip: 'g has a closed loop on top and a curled tail. q has a straight tail and no curl.' },
+  { t: 'y', set: ['y', 'v', 'g', 'j'], tip: 'y has a tail that drops straight down. v comes to a point and stops.' }
 ];
 
 const SYL = [
   ['banana', 3], ['cat', 1], ['elephant', 3], ['butterfly', 3], ['computer', 3],
   ['sun', 1], ['tomato', 3], ['rainbow', 2], ['pencil', 2], ['window', 2],
   ['hospital', 3], ['dinosaur', 3], ['sandwich', 2], ['alligator', 4], ['helicopter', 4],
-  ['umbrella', 3], ['bicycle', 3], ['dog', 1], ['paper', 2], ['tiger', 2]
+  ['umbrella', 3], ['bicycle', 3], ['dog', 1], ['paper', 2], ['tiger', 2],
+  ['balloon', 2], ['octopus', 3], ['strawberry', 3], ['kangaroo', 3], ['television', 4],
+  ['crocodile', 3], ['watermelon', 4], ['caterpillar', 4], ['guitar', 2], ['penguin', 2]
 ];
 
 const PICS = [
   ['cat', '🐱'], ['dog', '🐶'], ['sun', '☀️'], ['bed', '🛏️'], ['fish', '🐟'],
   ['frog', '🐸'], ['ship', '🚢'], ['moon', '🌙'], ['tree', '🌳'], ['apple', '🍎'],
-  ['house', '🏠'], ['water', '💧'], ['lamp', '💡'], ['book', '📖'], ['cake', '🎂']
+  ['house', '🏠'], ['water', '💧'], ['lamp', '💡'], ['book', '📖'], ['cake', '🎂'],
+  ['star', '⭐'], ['leaf', '🍃'], ['milk', '🥛'], ['shoe', '👟'], ['kite', '🪁'],
+  ['ring', '💍'], ['duck', '🦆'], ['bell', '🔔'], ['lion', '🦁']
 ];
 
 const RHYMES = [
@@ -266,7 +293,19 @@ const RHYMES = [
   { w: 'star', right: 'car', wrong: ['cup', 'moon', 'fish'] },
   { w: 'bee', right: 'tree', wrong: ['cup', 'dog', 'hat'] },
   { w: 'pen', right: 'ten', wrong: ['sun', 'bed', 'house'] },
-  { w: 'light', right: 'kite', wrong: ['bat', 'cup', 'fish'] }
+  { w: 'light', right: 'kite', wrong: ['bat', 'cup', 'fish'] },
+  { w: 'cat', right: 'hat', wrong: ['dog', 'sun', 'cup'] },
+  { w: 'king', right: 'ring', wrong: ['cat', 'book', 'tree'] },
+  { w: 'box', right: 'fox', wrong: ['sun', 'pen', 'cup'] },
+  { w: 'duck', right: 'truck', wrong: ['frog', 'cake', 'bed'] },
+  { w: 'snail', right: 'tail', wrong: ['moon', 'book', 'shoe'] },
+  { w: 'clock', right: 'sock', wrong: ['tree', 'bird', 'cup'] },
+  { w: 'bug', right: 'rug', wrong: ['moon', 'bell', 'fish'] },
+  { w: 'goat', right: 'boat', wrong: ['pen', 'cat', 'star'] },
+  { w: 'wall', right: 'ball', wrong: ['moon', 'book', 'fish'] },
+  { w: 'moon', right: 'spoon', wrong: ['cat', 'pen', 'bed'] },
+  { w: 'hen', right: 'den', wrong: ['cup', 'dog', 'tree'] },
+  { w: 'nose', right: 'rose', wrong: ['sun', 'bat', 'frog'] }
 ];
 
 /* ==========================================================================
@@ -482,6 +521,7 @@ function renderQuestion() {
 }
 
 function onAnswer(q, ok, chosen) {
+  recordAnswer('dyslexia', ok);
   if (ok) session.right++;
   else session.misses.push({ prompt: q.prompt, chosen: chosen || 'No answer', answer: q.answer });
 
